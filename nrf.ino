@@ -302,6 +302,8 @@ void read_rx_payload()
   
   delayMicroseconds(10);
   
+  receivedPAYLOADhandler(); // your function that handles received data
+  
   if(MODE==RX_MODE)
   {
     digitalWrite(SS,LOW);
@@ -341,5 +343,6 @@ void transmit() // call this function after setting transmissionPAYLOAD array to
   }
 }
 
+void receivedPAYLOADhandler(){}// define this function to set what to do after data is received
 
 void loop(){}
