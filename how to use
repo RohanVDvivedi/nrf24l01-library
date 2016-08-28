@@ -20,6 +20,7 @@ init(parameter) - initiaizes call this function every time you change rx to tx o
                 
                 
                 define a function named receivedPAYLOADhandler to do the task as soon as the data is received
+                on any side it will have the task to get the status of other device and print it and it may be used to set the transmissionPAYLOAD also. for the next cyle in rx
                 
                 
 the initial setup of init function can be changed to change the functionality of your nrf device as mentioned in the comments
@@ -65,12 +66,10 @@ TX code:
             transmissionPAYLOAD[0]=1;
             transmit();
             delay(1000);
-            
-            
+  
             transmissionPAYLOAD[0]=0;
             transmit();
             delay(1000);
-            
             
           }
         }
