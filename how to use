@@ -1,0 +1,163 @@
+copy paste the arduino code into your arduino code that requires nrf24l01 support
+
+the functions and variables to be used
+
+transmissionPAYLOAD[32]  -  array used for setting a 32 byte data that has to be sent
+recievedPAYLOAD[32] - array used for reading a 32 byte data
+                    - data will be present only if status_method() has been called for receiving data
+                    -no need to call status method if called by usind an interrupt else call it every time DATA_RECEIVED_FLAG is set to 1
+transmit()  - called for sending data after transmissionPAYLOAD[32] has been set to required values
+                (no need to set all values read and write any of 32 bytes of array and read them correspondingly at the other end)
+read_setup() - prints accessible values of registers in nrf that have been set for setting up the device
+            - used for debugging only
+set_rf_channel(<unsigned int,unsigned char or byte>) - to change the rf frequency nrf supports 2.4 to 2.4835 Hz
+                    frequency = (2400 + parameter) Mhz  parameter = integers between 0 to 80
+status_method() - to be called once everytime or once after everytime the data is received
+                    else the data won't be available in receivePAYLOAD array
+                - prints out approprite statement for debugging Serial print statement to be removed once the final code is working
+init(parameter) - initiaizes call this function every time you change rx to tx or tx to rx or at the beginning
+                - parameters = RX_MODE for rx mode and TX_MODE for tx mode
+                
+                
+                define a function named receivedPAYLOADhandler to do the task as soon as the data is received
+                
+                
+the initial setup of init function can be changed to change the functionality of your nrf device as mentioned in the comments
+the initial setup is enough for most single pipe communication like making rc vehicles or other single piped application
+multipipe support can be added by certain changes
+initial setup has acknoledgement enabled by default
+
+
+single pipe setup code
+  setup code uses attachInterrupt(0,status_method,FALLING); for first 2 codes
+
+TX code:
+        /*
+            at the top include everything that is there in nrf.ino including void setup function
+            you can add anyother thing to void setup function as per your need
+        */
+        
+        void receivedPAYLOADhandler()
+        {
+          if(receivedPAYLOAD[0]==120)
+            {
+              Serial.println("Bulb on sucessfully");
+            }
+          else if(receivedPAYLOAD[0]==190)
+            {
+              Serial.println("Bulb off sucessfully");
+            }
+        }
+        
+        
+        
+        void loop()
+        {
+          read_setup(); // to see the default vaulues set
+          init(TX_MODE);
+          read_setup(); // notice the difference
+          set_rf_channel(12);
+          
+          
+          
+          while(1)
+          {
+            transmissionPAYLOAD[0]=1;
+            transmit();
+            delay(1000);
+            
+            
+            transmissionPAYLOAD[0]=0;
+            transmit();
+            delay(1000);
+            
+            
+          }
+        }
+
+
+RX code:
+        /*
+            at the top include everything that is there in nrf.ino including void setup function
+            you can add anyother thing to void setup function as per your need
+        */
+        
+        void receivedPAYLOADhandler()
+        {
+          if(recievedPAYLOAD[0] == 1)
+          {
+            transmissionPAYLOAD=120;
+            digitalWrite(13,HIGH);
+          }
+          else if(recievedPAYLOAD[0] == 0)
+          {
+            transmissionPAYLOAD=190;
+            digitalWrite(13,LOW);
+          }
+        }
+        
+        
+        
+        void loop()
+        {
+          read_setup(); // to see the default vaulues set
+          init(RX_MODE);
+          read_setup(); // notice the difference
+          set_rf_channel(12);
+          
+          pinMode(13,OUTPUT);
+          
+          while(1)
+          {
+            
+          }
+        }
+        
+        
+RX code with DATA_RECEIVED_FLAG :
+        /*
+            at the top include everything that is there in nrf.ino including void setup function
+            you can add anyother thing to void setup function as per your need
+        */
+        
+        
+        void receivedPAYLOADhandler()
+        {
+          if(recievedPAYLOAD[0] == 1)
+          {
+            transmissionPAYLOAD=120;
+            digitalWrite(13,HIGH);
+          }
+          else if(recievedPAYLOAD[0] == 0)
+          {
+            transmissionPAYLOAD=190;
+            digitalWrite(13,LOW);
+          }
+        }
+        
+        void loop()
+        {
+          read_setup(); // to see the default vaulues set
+          init(RX_MODE);
+          read_setup(); // notice the difference
+          set_rf_channel(12);
+          
+          pinMode(13,OUTPUT);
+          
+          while(1)
+          {
+            while(DATA_RECEIVED_FLAG==0){}
+            status_method();
+          }
+        }
+
+
+process happening 
+transmission of 32 bytes from tx to rx
+rx receives message and at the same time rx sends acknoledgement packet i.e. transmissionPAYLOAD that was set in earlier cycle
+reciever does what is needed to be done as commanded by receivedPAYLOADhandler function and then sets the transmissionPAYLOAD for next cycle
+waits for transmitter for next command as the transmitter will process the acknowlegdement that has been received and handled by receivedPAYLOADhandler
+after transmitter has completed its task it will again send the command
+
+Please let me know for bugs
+--Rohan V Dvivedi
