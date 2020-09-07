@@ -1,4 +1,4 @@
-# nrf24l01-self-made-library-arduino
+# nrf24l01-library (arduino)
 
 When I was working to build flight controller from scratch, I need a robust library and hardware to support rf communication.
 I decided to use a readily available nrf module for this, but at the time I couldn't find any reliable library to do the heavy lifting for me.
